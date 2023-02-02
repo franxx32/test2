@@ -1,0 +1,42 @@
+<html lang="en">
+  <head>
+    <title>Test SSE</title>
+    <script>
+      function getProducts() {
+        const track = document.querySelector('#track');
+        fetch('http://localhost:3000/products')
+          .then(response => response.json())
+          .then(data => {
+            document.getElementById('track').value = data.trackId;
+          });
+      }
+
+      function subscribe() {
+        const evtSource = new EventSource(
+          `http://localhost:3000/jobs/subscribe/${
+            document.getElementById('track').value
+          }`,
+        );
+
+        evtSource.onmessage = function(event) {
+          const newElement = document.createElement('li');
+          const eventList = document.getElementById('results');
+          const d = JSON.parse(event.data);
+          console.log(d);
+          newElement.textContent = d.name
+            ? d.company + ' > ' + d.category + ' > ' + d.name + ' > ' + d.price
+            : d.s;
+          eventList.appendChild(newElement);
+        };
+      }
+    </script>
+  </head>
+  <body>
+    <button onclick="getProducts()">Get products, track id:</button>
+    <input id="track" type="text" name="input" value="" />
+    <hr />
+    <button onclick="subscribe()">Subscribe and track</button>
+
+    <ul id="results"></ul>
+  </body>
+</html>

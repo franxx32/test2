@@ -7,10 +7,8 @@ import { PassThrough } from 'stream';
 export class CrawlerService {
   private crawlers: string[];
   private parsersPath = __dirname + '/parsers';
-  constructor() {}
 
   async init() {
-    console.log(__dirname + './parsers');
     const parsers = readdirSync(this.parsersPath).map(
       parser => parser.split('.')[0],
     );
@@ -21,7 +19,6 @@ export class CrawlerService {
 
   parseData() {
     const tunnel = new PassThrough();
-    tunnel.cork();
     const promises = this.crawlers.map(crawler =>
       this.createWorker(crawler, tunnel),
     );
@@ -37,9 +34,10 @@ export class CrawlerService {
       const worker = new Worker(`${this.parsersPath}/${name}.parser.js`);
       worker.on('message', message => {
         console.log(message);
-        tunnel.write(message);
+        tunnel.write(`${JSON.stringify(message)}`);
       });
       worker.on('error', err => {
+        // tslint:disable-next-line:no-console
         console.log(err); // TODO: Update to logger
       });
       worker.on('exit', resolve);
